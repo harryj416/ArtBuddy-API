@@ -53,6 +53,33 @@ An API (Application Programming Interface) is like a waiter in a restaurant:
 * `ai_response`: This is what the AI replied with
 * If something goes wrong, you'll get an `error` message explaining what happened
 
+### Vision Analysis with AI
+
+**What it does**: Takes your image and a prompt, sends it to OpenAI's vision model, and returns the AI's analysis of the image.
+
+**How to use it**: Send a POST request to `/api/vision` with this information:
+```json
+{
+  "image": "base64_encoded_image_data_here",
+  "prompt": "What can you tell me about this artwork?"
+}
+```
+
+* `image`: This is your image in base64 format (required)
+* `prompt`: This is your question about the image (optional, defaults to "What's in this image?")
+
+**What you'll get back**:
+```json
+{
+  "prompt": "What can you tell me about this artwork?",
+  "ai_response": "This appears to be an abstract watercolor painting with vibrant blues and reds...",
+  "VERCEL_MESSAGE": "GONE THROUGH VERCEL!"
+}
+```
+
+* `ai_response`: This is the AI's analysis of your image
+* If something goes wrong, you'll get an `error` message explaining what happened
+
 ## Setting Up Your Own Copy
 
 1. **Get the code**: Clone (copy) the repository to your computer

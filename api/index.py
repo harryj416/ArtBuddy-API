@@ -1,4 +1,6 @@
 import os  # This lets us access environment variables and system functions
+import base64  # For encoding/decoding base64 image data
+import tempfile  # For creating temporary files
 from flask import Flask, request, jsonify  # Flask is the web framework that handles HTTP requests
 from openai import OpenAI  # This is the library that allows us to talk to OpenAI's AI models
 from dotenv import load_dotenv  # This loads our secret keys from a file so we don't have to hardcode them
@@ -17,6 +19,7 @@ if not api_key:
 client = OpenAI(api_key=api_key)
 # Choose which AI model to use, either from our settings or use a default one
 DEFAULT_MODEL = os.getenv("MODEL", "gpt-4o-mini-2024-07-18")
+DEFAULT_VISION_MODEL = os.getenv("VISION_MODEL", "gpt-4o")
 
 # Create our web application using Flask
 app = Flask(__name__)
@@ -84,13 +87,75 @@ def chat():
     # Return the enhanced data back to whoever called our API
     return jsonify(data)
 
+@app.route('/api/vision', methods=['POST'])
+def vision():
+    """This endpoint handles image analysis with text.
+    
+    It accepts:
+    1. A base64-encoded image
+    2. A text prompt asking about the image
+    3. Sends both to OpenAI's vision model
+    4. Returns the AI's analysis
+    """
+    data = request.json
+    
+    # Check if we received data
+    if not data:
+        return jsonify({"error": "No JSON data received"}), 400
+    
+    # Extract the image and prompt
+    image_base64 = data.get('image')
+    prompt = data.get('prompt', "What's in this image?")
+    
+    # Make sure we have an image
+    if not image_base64:
+        return jsonify({"error": "No 'image' field in request"}), 400
+    
+    try:
+        # Strip any potential prefix like "data:image/jpeg;base64,"
+        if "base64," in image_base64:
+            image_base64 = image_base64.split("base64,")[1]
+        
+        # Create data URL for the image
+        image_data_url = f"data:image/jpeg;base64,{image_base64}"
+        
+        # Using the newer responses API format
+        response = client.responses.create(
+            model=DEFAULT_VISION_MODEL,
+            input=[
+                {"role": "user", "content": prompt},
+                {
+                    "role": "user", 
+                    "content": [
+                        {
+                            "type": "input_image",
+                            "image_url": {"url": image_data_url}
+                        }
+                    ]
+                }
+            ]
+        )
+        
+        # Get the response and prepare the return data
+        ai_message = response.output_text
+        result = {
+            "prompt": prompt,
+            "ai_response": ai_message,
+            "VERCEL_MESSAGE": "GONE THROUGH VERCEL!"
+        }
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 # This is a catch-all route that handles all other URLs
 # If someone goes to a URL we don't specifically handle above,
 # they'll get this friendly message instead
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def catch_all(path):
-    return jsonify({"message": "Welcome to Lock-In-Buddy API", "path": path})
+    return jsonify({"message": "Welcome to ArtBuddy API", "path": path})
 
 # This code only runs if we're starting the application directly
 # (not if it's being imported by another file)
