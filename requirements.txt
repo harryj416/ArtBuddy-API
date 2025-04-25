@@ -1,0 +1,17 @@
+# Flask is the web framework that handles HTTP requests and responses
+flask==2.0.1
+
+# Werkzeug is a utility library that Flask uses behind the scenes
+werkzeug==2.0.3
+
+# OpenAI is the official library for communicating with OpenAI's AI models
+# We're using version 1.55.3 because it avoids a compatibility issue
+openai==1.55.3
+
+# HTTPX is a HTTP client library used by OpenAI to make web requests
+# We're using a specific version range to avoid compatibility issues
+httpx>=0.26.0,<0.27.0
+
+# Python-dotenv allows us to load environment variables from a .env file
+# This helps keep our API keys and secrets secure
+python-dotenv==1.0.0 
