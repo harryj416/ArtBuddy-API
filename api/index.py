@@ -92,7 +92,7 @@ def vision():
     """This endpoint handles image analysis with text.
     
     It accepts:
-    1. A base64-encoded image
+    1. A base64-encoded image or image URL
     2. A text prompt asking about the image
     3. Sends both to OpenAI's vision model
     4. Returns the AI's analysis
@@ -104,20 +104,28 @@ def vision():
         return jsonify({"error": "No JSON data received"}), 400
     
     # Extract the image and prompt
-    image_base64 = data.get('image')
+    image_data = data.get('image')
     prompt = data.get('prompt', "What's in this image?")
     
     # Make sure we have an image
-    if not image_base64:
+    if not image_data:
         return jsonify({"error": "No 'image' field in request"}), 400
     
     try:
-        # Strip any potential prefix like "data:image/jpeg;base64,"
-        if "base64," in image_base64:
-            image_base64 = image_base64.split("base64,")[1]
+        # Determine if we have a URL or base64 data
+        is_url = image_data.startswith('http')
         
-        # Create data URL for the image
-        image_data_url = f"data:image/jpeg;base64,{image_base64}"
+        if is_url:
+            # Use the URL directly
+            image_url = image_data
+        else:
+            # Handle base64 data
+            # Strip any potential prefix like "data:image/jpeg;base64,"
+            if "base64," in image_data:
+                image_data = image_data.split("base64,")[1]
+            
+            # Create data URL for the image
+            image_url = f"data:image/jpeg;base64,{image_data}"
         
         # Using the chat completions API which is more stable
         messages = [
@@ -128,7 +136,7 @@ def vision():
                     {
                         "type": "image_url",
                         "image_url": {
-                            "url": image_data_url
+                            "url": image_url
                         }
                     }
                 ]
