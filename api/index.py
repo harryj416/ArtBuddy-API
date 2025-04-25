@@ -94,8 +94,9 @@ def vision():
     It accepts:
     1. A base64-encoded image or image URL
     2. A text prompt asking about the image
-    3. Sends both to OpenAI's vision model
-    4. Returns the AI's analysis
+    3. Optional metadata about the upload source
+    4. Sends the image to OpenAI's vision model
+    5. Returns the AI's analysis
     """
     data = request.json
     
@@ -106,6 +107,14 @@ def vision():
     # Extract the image and prompt
     image_data = data.get('image')
     prompt = data.get('prompt', "What's in this image?")
+    
+    # Get optional metadata (useful for debugging mobile uploads)
+    metadata = data.get('metadata', {})
+    is_mobile = metadata.get('source', '').startswith('mobile')
+    
+    # Log source if available (helpful for debugging)
+    source = metadata.get('source', 'unknown')
+    device = metadata.get('device', 'unknown')
     
     # Make sure we have an image
     if not image_data:
@@ -124,8 +133,12 @@ def vision():
             if "base64," in image_data:
                 image_data = image_data.split("base64,")[1]
             
-            # Create data URL for the image
-            image_url = f"data:image/jpeg;base64,{image_data}"
+            # Create data URL for the image - handle common mobile formats
+            img_format = metadata.get('format', 'jpeg').lower()
+            if img_format not in ['jpeg', 'jpg', 'png', 'gif', 'webp']:
+                img_format = 'jpeg'  # Default to JPEG
+                
+            image_url = f"data:image/{img_format};base64,{image_data}"
         
         # Using the chat completions API which is more stable
         messages = [
@@ -158,10 +171,28 @@ def vision():
             "VERCEL_MESSAGE": "GONE THROUGH VERCEL!"
         }
         
+        # Include source info in response if it was provided
+        if is_mobile:
+            result["source_info"] = f"Received from {source} on {device}"
+        
         return jsonify(result)
         
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        error_msg = str(e)
+        
+        # Provide more helpful error messages for common mobile upload issues
+        if "invalid_image_format" in error_msg:
+            if is_mobile:
+                error_msg = "The image format from your device isn't supported. Please try a JPEG or PNG image."
+            else:
+                error_msg = "Invalid image format. Supported formats: JPEG, PNG, GIF, WebP."
+        elif "file too large" in error_msg.lower() or "payload too large" in error_msg.lower():
+            error_msg = "The image is too large. Please try a smaller image or lower resolution."
+        
+        return jsonify({
+            "error": error_msg,
+            "source": source if is_mobile else "direct"
+        }), 500
 
 # This is a catch-all route that handles all other URLs
 # If someone goes to a URL we don't specifically handle above,
