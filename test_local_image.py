@@ -4,7 +4,7 @@ import json
 import sys
 import os
 
-def test_with_local_image(image_path, prompt="What can you tell me about this image?"):
+def test_with_local_image(image_path, prompt_number=1):
     # The API URL
     API_URL = "https://art-buddy-api.vercel.app/api/vision"
     
@@ -19,7 +19,7 @@ def test_with_local_image(image_path, prompt="What can you tell me about this im
     # Prepare payload
     payload = {
         "image": image_data,
-        "prompt": prompt
+        "prompt_number": prompt_number
     }
     
     # Call the API
@@ -37,11 +37,11 @@ if __name__ == "__main__":
         image_path = sys.argv[1]
         
         # Check if a prompt was provided
-        prompt = "What can you tell me about this image?"
+        prompt_number = 1
         if len(sys.argv) > 2:
-            prompt = sys.argv[2]
+            prompt_number = int(sys.argv[2])
             
-        test_with_local_image(image_path, prompt)
+        test_with_local_image(image_path, prompt_number)
     else:
-        print("Usage: python test_local_image.py <path_to_image> [optional_prompt]")
-        print("Example: python test_local_image.py example.jpg \"What style is this artwork?\"") 
+        print("Usage: python test_local_image.py <path_to_image> [optional_prompt_number]")
+        print("Example: python test_local_image.py example.jpg 2") 

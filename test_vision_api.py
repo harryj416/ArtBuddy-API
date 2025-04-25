@@ -6,8 +6,8 @@ API_URL = "https://art-buddy-api.vercel.app/api/vision"
 
 # Use a public image URL
 payload = {
-    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Vincent_van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg/1280px-Vincent_van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg",
-    "prompt": "What can you tell me about this famous artwork?"
+    "image": "https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg",
+    "prompt_number": 0  # Use the default prompt
 }
 
 # Call the API

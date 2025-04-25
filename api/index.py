@@ -21,6 +21,16 @@ client = OpenAI(api_key=api_key)
 DEFAULT_MODEL = os.getenv("MODEL", "gpt-4o-mini-2024-07-18")
 DEFAULT_VISION_MODEL = os.getenv("VISION_MODEL", "gpt-4o")
 
+# List of predefined prompts for image analysis
+ANALYSIS_PROMPTS = [
+    "What's in this image?",  # Basic default prompt (index 0)
+    "Analyze this artwork and provide constructive feedback. What techniques are used? What areas could be improved?",  # Detailed art feedback (index 1)
+    "Identify the art style and techniques used in this artwork. What makes it unique?",  # Style analysis (index 2)
+    "What emotions does this artwork convey? How does the artist achieve this effect?",  # Emotional analysis (index 3)
+    "Compare this to professional artwork in the same style. What techniques could the artist learn from professionals?",  # Comparative analysis (index 4)
+    "Provide step-by-step suggestions to improve this artwork while maintaining the artist's style and vision."  # Improvement guidance (index 5)
+]
+
 # Create our web application using Flask
 app = Flask(__name__)
 
@@ -93,7 +103,7 @@ def vision():
     
     It accepts:
     1. A base64-encoded image or image URL
-    2. A text prompt asking about the image
+    2. A prompt number to select from predefined prompts (0-5)
     3. Optional metadata about the upload source
     4. Sends the image to OpenAI's vision model
     5. Returns the AI's analysis
@@ -104,9 +114,20 @@ def vision():
     if not data:
         return jsonify({"error": "No JSON data received"}), 400
     
-    # Extract the image and prompt
+    # Extract the image and prompt number
     image_data = data.get('image')
-    prompt = data.get('prompt', "What's in this image?")
+    prompt_number = data.get('prompt_number', 0)  # Default to the first prompt (index 0)
+    
+    # Validate prompt number and select the appropriate prompt
+    try:
+        prompt_number = int(prompt_number)
+        if prompt_number < 0 or prompt_number >= len(ANALYSIS_PROMPTS):
+            prompt_number = 0  # Default to first prompt if out of range
+        prompt = ANALYSIS_PROMPTS[prompt_number]
+    except (ValueError, TypeError):
+        # If prompt_number is not a valid integer, use the default prompt
+        prompt_number = 0
+        prompt = ANALYSIS_PROMPTS[0]
     
     # Get optional metadata (useful for debugging mobile uploads)
     metadata = data.get('metadata', {})
@@ -166,7 +187,8 @@ def vision():
         # Get the response and prepare the return data
         ai_message = response.choices[0].message.content
         result = {
-            "prompt": prompt,
+            "prompt_number": prompt_number,
+            "prompt_text": prompt,
             "ai_response": ai_message,
             "VERCEL_MESSAGE": "GONE THROUGH VERCEL!"
         }

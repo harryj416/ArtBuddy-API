@@ -6,7 +6,7 @@ import os
 from PIL import Image
 import io
 
-def simulate_mobile_upload(image_path, prompt="What can you tell me about this artwork?"):
+def simulate_mobile_upload(image_path, prompt_number=1):
     """
     Simulates an iOS app uploading a photo from camera roll:
     1. Reads the image file
@@ -54,7 +54,7 @@ def simulate_mobile_upload(image_path, prompt="What can you tell me about this a
         # Create payload that mimics iOS app
         payload = {
             "image": base64_data,
-            "prompt": prompt,
+            "prompt_number": prompt_number,
             "metadata": {
                 "source": "mobile_camera",
                 "device": "iOS_simulator",
@@ -90,11 +90,11 @@ if __name__ == "__main__":
         image_path = sys.argv[1]
         
         # Check if a prompt was provided
-        prompt = "What can you tell me about this artwork?"
+        prompt_number = 1
         if len(sys.argv) > 2:
-            prompt = sys.argv[2]
+            prompt_number = int(sys.argv[2])
         
-        simulate_mobile_upload(image_path, prompt)
+        simulate_mobile_upload(image_path, prompt_number)
     else:
-        print("Usage: python test_mobile_upload.py <path_to_image> [optional_prompt]")
-        print("Example: python test_mobile_upload.py example.jpg \"Analyze this artwork\"") 
+        print("Usage: python test_mobile_upload.py <path_to_image> [optional_prompt_number]")
+        print("Example: python test_mobile_upload.py example.jpg 2") 
