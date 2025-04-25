@@ -119,25 +119,31 @@ def vision():
         # Create data URL for the image
         image_data_url = f"data:image/jpeg;base64,{image_base64}"
         
-        # Using the newer responses API format
-        response = client.responses.create(
-            model=DEFAULT_VISION_MODEL,
-            input=[
-                {"role": "user", "content": prompt},
-                {
-                    "role": "user", 
-                    "content": [
-                        {
-                            "type": "input_image",
-                            "image_url": {"url": image_data_url}
+        # Using the chat completions API which is more stable
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": image_data_url
                         }
-                    ]
-                }
-            ]
+                    }
+                ]
+            }
+        ]
+        
+        # Send to OpenAI's vision model
+        response = client.chat.completions.create(
+            model=DEFAULT_VISION_MODEL,
+            messages=messages,
+            max_tokens=500
         )
         
         # Get the response and prepare the return data
-        ai_message = response.output_text
+        ai_message = response.choices[0].message.content
         result = {
             "prompt": prompt,
             "ai_response": ai_message,
